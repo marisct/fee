@@ -1,0 +1,4 @@
+# Keep config, schema and docs private (includes/ and storage/ carry their own deny rules)
+<FilesMatch "^(config\.php|config\.sample\.php|database\.sql|README\.md|\.gitignore)$">
+    Require all denied
+</FilesMatch>

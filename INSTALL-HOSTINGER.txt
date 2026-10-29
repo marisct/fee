@@ -1,0 +1,91 @@
+BOXING FEE MANAGER - INSTALL ON HOSTINGER
+==========================================
+
+You need: a Hostinger hosting plan with a domain, PHP 8.1 or newer (default is fine),
+and 15 minutes.
+
+STEP 1 - CREATE THE DATABASE
+----------------------------
+1. Log in to hPanel -> Websites -> Manage -> Databases -> Management.
+2. Create a new MySQL database. Note the three values Hostinger shows:
+      Database name   e.g. u123456789_fee
+      Database user   e.g. u123456789_feeuser
+      Password        (the one you typed)
+   The host is  localhost.
+
+STEP 2 - UPLOAD THE FILES
+-------------------------
+1. hPanel -> Files -> File Manager -> open  public_html.
+2. Create a new folder called  fee   (or upload to public_html itself if the
+   domain is only used for this app).
+3. Open the folder, click Upload, choose  boxing-fee-manager.zip.
+4. Right-click the zip -> Extract (extract into the same folder).
+5. Delete the zip file after extraction.
+   You should now see files like index.php, install.php, config.php and the
+   folders includes, webhook, cron, assets, storage.
+
+STEP 3 - EDIT config.php
+------------------------
+Right-click config.php -> Edit, and fill in:
+
+   'host'    => 'localhost',
+   'name'    => 'u123456789_fee',        <- your database name
+   'user'    => 'u123456789_feeuser',    <- your database user
+   'pass'    => 'your database password',
+   'app_url' => 'https://yourdomain.com/fee',   <- no slash at the end
+
+app_url must be exactly the address you open in the browser (with https, and
+with or without www the same way your site opens). Save the file.
+
+STEP 4 - RUN THE INSTALLER
+--------------------------
+1. Open  https://yourdomain.com/fee/install.php  in the browser.
+2. Enter your club name, your name, admin email and a password -> Install.
+3. Log in.
+4. In File Manager delete  install.php  (important).
+
+STEP 5 - SSL (HTTPS)
+--------------------
+hPanel -> Security -> SSL: make sure the free SSL is installed and
+"Force HTTPS" is on. Razorpay webhooks and WhatsApp links need https.
+
+STEP 6 - RAZORPAY
+-----------------
+In the app go to Settings -> Razorpay and follow the on-screen steps:
+ - paste Key ID + Key Secret from Razorpay Dashboard -> Account & Settings -> API Keys
+ - create a webhook in Razorpay with the URL shown on that page
+   (https://yourdomain.com/fee/webhook/razorpay.php), the same secret,
+   and the events payment_link.paid, payment_link.partially_paid,
+   payment_link.expired, payment_link.cancelled
+ - click "Test keys"
+
+STEP 7 - WHATSAPP
+-----------------
+Settings -> WhatsApp: paste the permanent access token and phone number ID
+from Meta, create the two message templates shown on that page in WhatsApp
+Manager and wait for Meta to approve them, then use "Send a test message".
+
+STEP 8 - DAILY REMINDERS (optional)
+-----------------------------------
+hPanel -> Advanced -> Cron Jobs -> Create:
+   Type:     Custom
+   Command:  php /home/u123456789/domains/yourdomain.com/public_html/fee/cron/reminders.php
+   Schedule: once a day (for example 10:00)
+
+The exact path is printed for you in the app under Settings -> Reminders.
+If the php command does not work, use the URL version instead:
+   curl -s "https://yourdomain.com/fee/cron/reminders.php?key=YOUR_KEY"
+(the full URL with your key is also shown under Settings -> Reminders).
+
+PROBLEMS?
+---------
+ - "Could not connect to the database": re-check the four values in config.php.
+   The user must be assigned to the database in hPanel (it is, when you create
+   them together).
+ - Blank page / error 500: open hPanel -> Advanced -> PHP Configuration and
+   choose PHP 8.1 or 8.2. Make sure the extensions pdo_mysql, curl and
+   mbstring are enabled (they are by default).
+ - Logged out after every save: app_url in config.php does not match the
+   address in the browser (www vs non-www, http vs https).
+ - Logs are written to the storage folder (php-error.log, razorpay.log,
+   whatsapp.log, payments.log).
